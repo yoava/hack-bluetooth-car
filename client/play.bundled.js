@@ -341,7 +341,16 @@
 
                 let xAxis = gamepad.axes[0];
                 let yAxis = gamepad.axes[1];
-
+                if (buttons.left) {
+                    xAxis = -1;
+                } else if (buttons.right) {
+                    xAxis = 1;
+                }
+                if (buttons.up) {
+                    yAxis = -1;
+                } else if (buttons.down) {
+                    yAxis = 1;
+                }
                 if (Math.abs(xAxis) <= MINIMAL_MOVE_AXIS) {
                     xAxis = 0;
                 }
@@ -398,26 +407,41 @@
             return (axisValue < 0 ? 32 - axisValue : 64 + axisValue);
         }
 
-        function getWheels(x, y) {
-            let left = y * MAX_POWER;
-            let right = y * MAX_POWER;
-            if (Math.abs(y) <= MINIMAL_MOVE_AXIS * 3) {
-                left = -x * MAX_POWER;
-                right = x * MAX_POWER;
+        function getDir(x) {
+            if (x < -MINIMAL_TURN_AXIS) {
+                return -1;
+            } else if (x > MINIMAL_TURN_AXIS) {
+                return 1;
             } else {
-                if (x < 0) {
-                    left += y * x * MAX_POWER;
+                return 0;
+            }
+        }
+
+        function getWheels(x, y) {
+            const power = Math.min(Math.sqrt(x * x + y * y), 1) * MAX_POWER | 0;
+            let dirX = getDir(x);
+            let dirY = getDir(y);
+
+            let left = 0;
+            let right = 0;
+            if (dirX == 0) {
+                left = dirY * power;
+                right = dirY * power;
+            } else if (dirY == 0) {
+                left = -dirX * power;
+                right = dirX * power;
+            } else {
+                if (dirX < 0) {
+                    right = dirY * power;
                 } else {
-                    right -= y * x * MAX_POWER;
+                    left = dirY * power;
                 }
             }
 
-            left = left | 0;
-            right = right | 0;
             const wheelL = toWheelValue(left);
             const wheelR = toWheelValue(right);
 
-            return {left, right, wheelL, wheelR};
+            return {power, dirX, dirY, left, right, wheelL, wheelR};
         }
 
 // function getWheels(x, y) {
