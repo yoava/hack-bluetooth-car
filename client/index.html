@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>play</title>
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+</head>
+<body>
+<pre id="cords"></pre>
+
+<svg width="240" height="120"
+     xmlns="http://www.w3.org/2000/svg">
+
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L9,3 z" fill="#f00"/>
+    </marker>
+
+    <line id="line" x1="50" y1="50" x2="100" y2="100"
+          stroke-width="2" stroke="black" marker-end="url(#arrow)"/>
+
+    <rect id="wheelL" x="110" y="50" height="10" width="10"></rect>
+    <rect id="wheelR" x="130" y="50" height="10" width="10"></rect>
+</svg>
+
+<pre id="debug"></pre>
+
+</body>
+</html>
+<script src="./play.bundled.js" charset="utf-8"></script>

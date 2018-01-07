@@ -1,0 +1,62 @@
+## Eclipse ############
+.metadata/
+.settings/
+.project
+.classpath
+
+## IntelliJ ###########
+out/
+.idea/
+classes/
+*.iml
+*.ipr
+*.iws
+*.ids
+*.patch
+atlassian-ide-plugin.xml
+
+## Logs ###############
+*.log
+
+## Gradle #############
+.gradle/
+build/
+target/
+local.properties
+
+## Andrdoid ############
+.externalNativeBuild
+
+## Web ################
+bower_components/
+node_modules/
+dist/
+
+## Mac ################
+.DS_Store
+
+## Windows ############
+Thumbs.db
+ehthumbs.db
+
+## Xcode ##############
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+Pods/
+Carthage/
+
+## C #################
+cmake-build-debug/
