@@ -14,7 +14,7 @@ const port = new SerialPort('/dev/tty.HC-06-DevB', {
     }
     console.info('Connected')
     setInterval(function () {
-        port.write(new Buffer([15, wheelL, wheelR, 127, 0]), function (err) {
+        port.write(new Buffer([15, wheelR, wheelL, 127, 0]), function (err) {
             if (err) {
                 //
                 // setTimeout(() => port.open(), 500);

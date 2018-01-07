@@ -292,13 +292,13 @@
         var __WEBPACK_IMPORTED_MODULE_0_gamepad_api_mappings___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_gamepad_api_mappings__);
 
 
-        let $d = document.createElement('div'); // fake, overwritten
+        const $d = document.getElementById('debug'); // fake, overwritten
 
         const MAX_POWER = 12;
-        const DEAD_AXIS = 0.05;
+        const MINIMAL_MOVE_AXIS = 0.05;
+        const MINIMAL_TURN_AXIS = 0.25;
 
         window.addEventListener('load', () => {
-            $d = document.querySelector('#debug');
             debug('waiting for gamepad...');
 
             let check = setInterval(() => {
@@ -307,63 +307,50 @@
                 if (gamepads[0] === null) return; // chrome no gamepaD
                 clearInterval(check);
                 debug('gamepad detected !');
-                gmap();
-            }, 1000);
+            }, 100);
 
         });
 
         const debug = (text) => {
-            const $line = document.createElement('div');
-            $line.innerText = text;
-            $d.appendChild($line);
+            $d.innerHTML = text;
         };
 
-        const gmap = () => {
-            let gamepad = window.navigator.getGamepads()[0];
-            const deadZonesTable = [];
-            console.log(gamepad);
-
-            let deviceMap = Object(__WEBPACK_IMPORTED_MODULE_0_gamepad_api_mappings__["getMapping"])(gamepad.id, gamepad.mapping);
-            let deadZones = deadZonesTable[deviceMap.deadZone];
-            console.log(deviceMap)
-            listen();
-        };
-
-        const listen = () => {
-            let gamepad = window.navigator.getGamepads()[0];
-            let deviceMap = Object(__WEBPACK_IMPORTED_MODULE_0_gamepad_api_mappings__["getMapping"])(gamepad.id, gamepad.mapping);
-            gamepad.buttons.forEach((b, i) => {
-                if (b.pressed === true) {
-                    debug(`${deviceMap.buttons[i]} is down`);
-                }
-            });
-            setTimeout(() => listen(), 200);
-        };
-
-        const cords = document.getElementById('cords');
+        const stats = document.getElementById('stats');
         const line = document.getElementById('line');
         const wheelLBar = document.getElementById('wheelL');
         const wheelRBar = document.getElementById('wheelR');
 
-        let prevAxes = [];
+        let prevAxes;
+        let prevButtons;
         setInterval(() => {
             const gamepad = window.navigator.getGamepads()[0];
 
-            if (prevAxes != gamepad.axes) {
-                cords.innerHTML = JSON.stringify(gamepad.axes, null, ' ');
+            // get buttons
+            let deviceMap = Object(__WEBPACK_IMPORTED_MODULE_0_gamepad_api_mappings__["getMapping"])(gamepad.id, gamepad.mapping);
+            const buttons = {};
+            gamepad.buttons.forEach((b, i) => {
+                if (b.pressed === true) {
+                    buttons[deviceMap.buttons[i]] = true;
+                }
+            });
+            const buttonsJSON = JSON.stringify(buttons);
+
+            if (prevAxes != gamepad.axes || prevButtons != buttonsJSON) {
                 prevAxes = gamepad.axes;
+                prevButtons = buttonsJSON;
 
                 let xAxis = gamepad.axes[0];
                 let yAxis = gamepad.axes[1];
 
-                if (Math.abs(xAxis) <= DEAD_AXIS) {
+                if (Math.abs(xAxis) <= MINIMAL_MOVE_AXIS) {
                     xAxis = 0;
                 }
-                if (Math.abs(yAxis) <= DEAD_AXIS) {
+                if (Math.abs(yAxis) <= MINIMAL_MOVE_AXIS) {
                     yAxis = 0;
                 }
                 line.style.display = xAxis == 0 && yAxis == 0 ? 'none' : '';
 
+                // update arrow
                 const x1 = 50 - 50 * xAxis / 2;
                 const x2 = 50 + 50 * xAxis / 2;
                 const y1 = 50 - 50 * yAxis / 2;
@@ -374,19 +361,34 @@
                 line.setAttribute('y2', y2);
 
                 const moveData = getWheels(xAxis, yAxis);
-                cords.innerHTML += '\n' + JSON.stringify(moveData);
+                stats.innerHTML = 'axis = ' + JSON.stringify({
+                        l: {
+                            x: gamepad.axes[0].toFixed(4),
+                            y: gamepad.axes[1].toFixed(4),
+                        },
+                        r: {
+                            x: gamepad.axes[2].toFixed(4),
+                            y: gamepad.axes[3].toFixed(4),
+                        }
+                    })
+                    + '\nbuttons = ' + buttonsJSON
+                    + '\nmotors = ' + JSON.stringify(moveData);
+
                 console.info(moveData);
 
+                // update engine bars
                 const lBarHeight = -moveData.left / MAX_POWER * 50;
                 wheelLBar.setAttribute('height', Math.abs(lBarHeight));
                 const rBarHeight = -moveData.right / MAX_POWER * 50;
                 wheelRBar.setAttribute('height', Math.abs(rBarHeight));
                 wheelLBar.setAttribute('y', 50 - Math.max(0, lBarHeight));
                 wheelRBar.setAttribute('y', 50 - Math.max(0, rBarHeight));
+                wheelLBar.style.fill = Math.abs(lBarHeight) > 50 ? 'red' : 'black';
+                wheelRBar.style.fill = Math.abs(rBarHeight) > 50 ? 'red' : 'black';
 
                 $.ajax(`/move/${moveData.wheelL},${moveData.wheelR}`);
             }
-        }, 1);
+        }, 25);
 
 
         function toWheelValue(axisValue) {
@@ -399,14 +401,14 @@
         function getWheels(x, y) {
             let left = y * MAX_POWER;
             let right = y * MAX_POWER;
-            if (Math.abs(y) <= DEAD_AXIS * 3) {
-                left = x * MAX_POWER;
-                right = -x * MAX_POWER;
+            if (Math.abs(y) <= MINIMAL_MOVE_AXIS * 3) {
+                left = -x * MAX_POWER;
+                right = x * MAX_POWER;
             } else {
                 if (x < 0) {
-                    left += x * MAX_POWER;
+                    left += y * x * MAX_POWER;
                 } else {
-                    right -= x * MAX_POWER;
+                    right -= y * x * MAX_POWER;
                 }
             }
 
